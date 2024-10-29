@@ -1,13 +1,22 @@
 
 /*
-  H-bridge inverter controller
-  (For reference, see circuit in https://drive.google.com/file/d/1E8HW0ulxhN9Z9mWrTRM3nkDeVtunls0v/view?usp=drive_link)
-  Circuit based on reference: https://www.homemade-circuits.com/arduino-full-bridge-h-bridge-sinewave-inverter-circuit/ 
+  7-segment display driver
 
-  Operation: 
+  Operation: This application simply counts up from 0 to 9 periodically and runs in an infinite loop. This code has been tested on Arduino Nano and works as expected.
+
+  If the 7 segment display you are driving is common anode, you can use this code without any change. If you are using a common cathode 7-segment display, simply comment out the following definition:
+
+  #define COMMON_ANODE_DISPLAY
+
+  Be sure to connect your Arduino Nano to the respective digital pins as per definitions provided. You can change the recommended pins as you wish, of course.
+
+  Useful tips:
+  1 - Be sure to connect a 1K resistor externally to each digit pin of your 7-segment display to maintain a fixed light intensity.
+  2 - This driver software will also work with optocouplers (assuming the resistors mentioned above are connected to each optocoupler!)
+  3 - You can also experiment with different values for the #define DIGIT_LATENCY_MS and #define OFF_DELAY_MS values to change the speed of counting.
 
   by circuitapps
-  January 2024
+  October 2024
 */
 
 /* 7-SEGMENT DISPLAY NAMING CONVENTION
@@ -24,16 +33,23 @@
 
 */
 
-#define SEG_A 2  // D2
-#define SEG_B 3  // D3
-#define SEG_C 4  // D4
-#define SEG_D 5  // D5
-#define SEG_E 6  // D6
-#define SEG_F 7  // D7
-#define SEG_G 8  // D8
+#define COMMON_ANODE_DISPLAY  // Simply comment this line out if you are using common cathode 7-segment display!
 
-#define ACTIVE LOW  // Active definition as per 7-segment display
-#define PASSIVE HIGH  // Passive definition as per 7-segment display
+#define SEG_A 2  // Segment A of 7-segment display connected to D2 digital pin on Arduino Nano
+#define SEG_B 3  // Segment B of 7-segment display connected to D3 digital pin on Arduino Nano
+#define SEG_C 4  // Segment C of 7-segment display connected to D4 digital pin on Arduino Nano
+#define SEG_D 5  // Segment D of 7-segment display connected to D5 digital pin on Arduino Nano
+#define SEG_E 6  // Segment E of 7-segment display connected to D6 digital pin on Arduino Nano
+#define SEG_F 7  // Segment F of 7-segment display connected to D7 digital pin on Arduino Nano
+#define SEG_G 8  // Segment G of 7-segment display connected to D8 digital pin on Arduino Nano
+
+#ifdef COMMON_ANODE_DISPLAY
+  #define ACTIVE LOW  // Active definition as per 7-segment display
+  #define PASSIVE HIGH  // Passive definition as per 7-segment display
+#else
+  #define ACTIVE HIGH  // Active definition as per 7-segment display
+  #define PASSIVE LOW  // Passive definition as per 7-segment display
+#endif
 
 #define DIGIT_LATENCY_MS 1000  // Period of changing number displayed (in milliseconds)
 #define OFF_DELAY_MS 600  // Wait after turning all segments off
@@ -57,7 +73,6 @@ void turn_all_off(void)
   turn_off(SEG_C);
   turn_off(SEG_E);
   turn_off(SEG_F);
-
 }
 
 void display_ZERO(void)
@@ -203,13 +218,6 @@ void loop()
 
   while(1)
   {
-    /*
-    turn_on(SEG_D);
-    delay(1000);
-    turn_off(SEG_D);
-    delay(4000);
-    */
-
     display_operations[i]();
     i = (i + 1) %10;
     delay(DIGIT_LATENCY_MS);
